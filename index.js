@@ -1,11 +1,11 @@
 'use strict';
 
-function validateAndCoerce(_value, name) {
+function validateAndCoerce(_value, name, allowZero) {
     var value = parseInt(_value, 10);
     if (!isFinite(_value) || isNaN(value) || value !== _value) {
         throw new TypeError(name + ' must be a positive finite integer (was `'+_value+'`)');
     }
-    if (value <= 0) {
+    if ((!allowZero && value <= 0) || value < 0) {
         throw new RangeError(name + ' must be a positive finite integer (was `'+_value+'`)');
     }
     return value;
@@ -20,12 +20,12 @@ function TokenBucket(opts) {
         throw new TypeError('TokenBucket constructor requires {capacity, fillQuantity, fillTime}');
     }
 
-    this.capacity = validateAndCoerce(opts.capacity, 'opts.capacity');
-    this.fillQuantity = validateAndCoerce(opts.fillQuantity, 'opts.fillQuantity'),
-    this.fillTime = validateAndCoerce(opts.fillTime, 'opts.fillTime');
+    this.capacity = validateAndCoerce(opts.capacity, 'opts.capacity', false);
+    this.fillQuantity = validateAndCoerce(opts.fillQuantity, 'opts.fillQuantity', false),
+    this.fillTime = validateAndCoerce(opts.fillTime, 'opts.fillTime', false);
 
     if (opts.hasOwnProperty('initialCapacity')) {
-        this.left = validateAndCoerce(opts.initialCapacity, 'opts.initialCapacity');
+        this.left = validateAndCoerce(opts.initialCapacity, 'opts.initialCapacity', true);
         if (this.left > this.capacity) {
             throw new RangeError(
                 'Initial capacity cannot be greater than bucket capacity '+
@@ -85,7 +85,7 @@ TokenBucket.prototype._getWaitTime = function (tokens) {
 // returns minimum amount of time to wait until there are enough tokens;
 // 0 represents success
 TokenBucket.prototype.take = function (_tokens) {
-    var tokens = validateAndCoerce(_tokens, 'TokenBucket.take: argument');
+    var tokens = validateAndCoerce(_tokens, 'TokenBucket.take: argument', false);
     if (tokens > this.capacity) {
         throw new RangeError(
             'Cannot remove more tokens than the bucket capacity '+

@@ -18,7 +18,8 @@ describe('TokenBucket', function () {
             }).should.throw(TypeError, /constructor requires/);
         });
 
-        var optionalOpts = {initialCapacity: true};
+        var optionalOpts = {initialCapacity: true},
+            allowZero = {initialCapacity: true};
         [ 'capacity', 'fillQuantity', 'fillTime', 'initialCapacity' ].forEach(function (optName) {
             if (!optionalOpts[optName]) {
                 it('should throw a TypeError when `'+optName+'` is absent', function () {
@@ -49,17 +50,29 @@ describe('TokenBucket', function () {
             });
 
             RANGE_ERRORS.forEach(function (val) {
-                it('should throw a RangeError when `'+optName+'` is `'+val+'`', function () {
-                    var opts = {
-                        capacity: 10,
-                        fillQuantity: 1,
-                        fillTime: 1000
-                    };
-                    opts[optName] = val;
-                    (function () {
+                if (val === 0 && allowZero[optName]) {
+                    it('should allow `'+optName+'` to be `'+val+'`', function () {
+                        var opts = {
+                            capacity: 10,
+                            fillQuantity: 1,
+                            fillTime: 1000
+                        };
+                        opts[optName] = val;
                         new TokenBucket(opts);
-                    }).should.throw(RangeError, new RegExp(optName+' must be.*was `'+val+'`'));
-                });
+                    });
+                } else {
+                    it('should throw a RangeError when `'+optName+'` is `'+val+'`', function () {
+                        var opts = {
+                            capacity: 10,
+                            fillQuantity: 1,
+                            fillTime: 1000
+                        };
+                        opts[optName] = val;
+                        (function () {
+                            new TokenBucket(opts);
+                        }).should.throw(RangeError, new RegExp(optName+' must be.*was `'+val+'`'));
+                    });
+                }
             });
         });
 
@@ -76,7 +89,7 @@ describe('TokenBucket', function () {
         });
     });
 
-    describe.only('#take', function () {
+    describe('#take', function () {
         var clock;
         before(function () { clock = sinon.useFakeTimers(); });
         after(function () { clock.restore(); });
