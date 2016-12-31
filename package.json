@@ -1,16 +1,30 @@
 {
   "name": "simple-token-bucket",
   "version": "1.0.0",
-  "description": "",
+  "description": "A straightforward token bucket implementation with no entanglements",
   "main": "index.js",
   "scripts": {
     "test": "mocha test.js"
   },
-  "author": "",
+  "author": "Kris Reeves",
   "license": "ISC",
   "devDependencies": {
     "mocha": "^3.2.0",
     "should": "^11.1.2",
     "sinon": "^1.17.6"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myndzi/simple-token-bucket.git"
+  },
+  "keywords": [
+    "token",
+    "bucket",
+    "rate",
+    "limit"
+  ],
+  "bugs": {
+    "url": "https://github.com/myndzi/simple-token-bucket/issues"
+  },
+  "homepage": "https://github.com/myndzi/simple-token-bucket#readme"
 }
