@@ -1,20 +1,22 @@
 # simple-token-bucket
 
+Typescript token bucket implementation with no dependencies.
+
 ```
 $ npm install --save simple-token-bucket
 ```
 
-```js
-var TokenBucket = require('simple-token-bucket');
+```ts
+import { TokenBucket } from 'simple-token-bucket';
 
-var bucket = new TokenBucket({
-	capacity: 10,
+const bucket = new TokenBucket({
+    capacity: 10,
     fillQuantity: 1,
     fillTime: 1000, // in milliseconds
     initialCapacity: 0
 });
 
-var timeToWait = bucket.take(3);
+const timeToWait = bucket.take(3);
 ```
 
 ## Options

@@ -1,18 +1,9 @@
 {
   "name": "simple-token-bucket",
-  "version": "1.0.0",
-  "description": "A straightforward token bucket implementation with no entanglements",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha test.js"
-  },
   "author": "Kris Reeves",
   "license": "ISC",
-  "devDependencies": {
-    "mocha": "^3.2.0",
-    "should": "^11.1.2",
-    "sinon": "^1.17.6"
-  },
+  "version": "2.0.0",
+  "description": "A straightforward token bucket implementation with no entanglements",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/myndzi/simple-token-bucket.git"
@@ -26,5 +17,39 @@
   "bugs": {
     "url": "https://github.com/myndzi/simple-token-bucket/issues"
   },
-  "homepage": "https://github.com/myndzi/simple-token-bucket#readme"
+  "homepage": "https://github.com/myndzi/simple-token-bucket#readme",
+  "scripts": {
+    "test": "jest",
+    "clean": "rm -rf ./lib/*",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc -p ./tsconfig.esm.json",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json && mv lib/cjs/index.js lib/cjs/index.cjs",
+    "prepack": "npm run build"
+  },
+  "type": "module",
+  "main": "./lib/esm/index.js",
+  "types": "./lib/esm/types/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/types/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/types/index.d.ts",
+        "default": "./lib/cjs/index.cjs"
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
 }
