@@ -1,8 +1,8 @@
 {
   "name": "simple-token-bucket",
-  "author": "Kris Reeves",
-  "license": "ISC",
-  "version": "2.0.0",
+  "author": "Kristopher Reeves",
+  "license": "MIT",
+  "version": "2.0.1",
   "description": "A straightforward token bucket implementation with no entanglements",
   "repository": {
     "type": "git",
@@ -30,7 +30,8 @@
   "main": "./lib/esm/index.js",
   "types": "./lib/esm/types/index.d.ts",
   "files": [
-    "lib/**/*"
+    "LICENSE",
+    "lib/"
   ],
   "exports": {
     ".": {
