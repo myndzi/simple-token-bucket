@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+HERE=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+IMAGE_NAME="simple-token-bucket-test"
+
+pushd "$HERE"
+
+for x in cjs esm; do
+  docker build -f "$HERE/integration-tests/$x/Dockerfile" -t "$IMAGE_NAME:$x" .
+  docker run --rm -it "$IMAGE_NAME:$x"
+done
+
+popd
