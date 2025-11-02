@@ -5,6 +5,7 @@ const esc = (val: any) => String(val).replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 describe('TokenBucket', () => {
   const TYPE_ERRORS: any[] = [-Infinity, -1.2, 1.2, Infinity, NaN, null, new Date(), true, false, 'foo', '', void 0, [], {}, () => {}],
     RANGE_ERRORS = [-1, 0];
+  type NumberKeys = keyof { [K in keyof BucketOptions as number extends BucketOptions[K] ? K : never]: 1 };
 
   describe('constructor', () => {
     it('should throw with no options', () => {
@@ -13,9 +14,9 @@ describe('TokenBucket', () => {
       expect(create).toThrow(/constructor requires/);
     });
 
-    const allowZero: Partial<Record<keyof BucketOptions, boolean>> = { initialCapacity: true };
+    const allowZero: Partial<Record<NumberKeys, boolean>> = { initialCapacity: true };
 
-    const requiredKeys: (keyof BucketOptions)[] = ['capacity', 'fillQuantity', 'fillTime'];
+    const requiredKeys: NumberKeys[] = ['capacity', 'fillQuantity', 'fillTime'];
     describe('missing opts', () => {
       it.each(requiredKeys)('should throw a TypeError when `%s` is absent', key => {
         const opts: BucketOptions = {
@@ -30,9 +31,9 @@ describe('TokenBucket', () => {
       });
     });
 
-    const allKeys: (keyof BucketOptions)[] = ['capacity', 'fillQuantity', 'fillTime', 'initialCapacity'];
-    const typeTests: [keyof BucketOptions, any][] = allKeys.flatMap(key =>
-      TYPE_ERRORS.map((invalidValue): [keyof BucketOptions, any] => [key, invalidValue])
+    const allKeys: NumberKeys[] = ['capacity', 'fillQuantity', 'fillTime', 'initialCapacity'];
+    const typeTests: [NumberKeys, any][] = allKeys.flatMap(key =>
+      TYPE_ERRORS.map((invalidValue): [NumberKeys, any] => [key, invalidValue])
     );
     describe('invalid opt values', () => {
       it.each(typeTests)('should throw a TypeError when `%s` is `%p`', (key, invalidValue) => {
@@ -48,8 +49,8 @@ describe('TokenBucket', () => {
       });
     });
 
-    const rangeTests: [string, keyof BucketOptions, number][] = allKeys.flatMap(key =>
-      RANGE_ERRORS.map((value): [string, keyof BucketOptions, number] => [allowZero[key] ? ' ' : ' NOT', key, value])
+    const rangeTests: [string, NumberKeys, number][] = allKeys.flatMap(key =>
+      RANGE_ERRORS.map((value): [string, NumberKeys, number] => [allowZero[key] ? ' ' : ' NOT', key, value])
     );
     describe('opts value ranges', () => {
       it.each(rangeTests)('should%s allow `%s` to be `%p`', (_, key, val) => {
@@ -109,6 +110,44 @@ describe('TokenBucket', () => {
         expect(take).toThrow(new RegExp('TokenBucket.take: argument must be.*was `' + esc(val) + '`'));
       });
     });
+    describe('clock', () => {
+      it('should accept a custom clock', () => {
+        let now = 10;
+        const clock = () => now;
+
+        const bucket = new TokenBucket({
+          capacity: 1,
+          fillQuantity: 1,
+          fillTime: 1,
+          clock: clock,
+        });
+
+        expect(bucket.take(1)).toEqual(0);
+        expect(bucket.take(1)).toEqual(1);
+        jest.advanceTimersByTime(1);
+        expect(bucket.take(1)).toEqual(1);
+        now++;
+        expect(bucket.take(1)).toEqual(0);
+      });
+
+      it('should use performance api', () => {
+        const spy = jest.spyOn(performance, 'now');
+
+        const bucket = new TokenBucket({
+          capacity: 1,
+          fillQuantity: 1,
+          fillTime: 1,
+        });
+
+        expect(bucket.take(1)).toEqual(0);
+        expect(bucket.take(1)).toEqual(1);
+        jest.advanceTimersByTime(1);
+        expect(bucket.take(1)).toEqual(0);
+        expect(spy.mock.calls.length).toBeGreaterThan(0);
+        spy.mockRestore();
+      });
+    });
+
     describe('behavior', () => {
       const tests: [number, number][] = [
         [1, 1000],

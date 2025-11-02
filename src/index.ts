@@ -9,11 +9,15 @@ const validateAndCoerce = (value: any, name: string, allowZero: boolean): number
   return parsed;
 };
 
+const HOP = Object.prototype.hasOwnProperty;
+const _performance_now = performance != null && typeof performance.now === 'function' ? () => performance.now() : undefined;
+
 export type BucketOptions = {
   capacity: number;
   fillQuantity: number;
   fillTime: number;
   initialCapacity?: number;
+  clock?: () => number;
 };
 
 export class TokenBucket {
@@ -22,6 +26,7 @@ export class TokenBucket {
   private fillTime: number;
   private left: number;
   private last: number;
+  private now: () => number;
 
   constructor(opts: BucketOptions) {
     if (!opts) throw new TypeError('TokenBucket constructor requires {capacity, fillQuantity, fillTime}');
@@ -30,7 +35,7 @@ export class TokenBucket {
     this.fillQuantity = validateAndCoerce(opts.fillQuantity, 'opts.fillQuantity', false);
     this.fillTime = validateAndCoerce(opts.fillTime, 'opts.fillTime', false);
 
-    if (Object.prototype.hasOwnProperty.call(opts, 'initialCapacity')) {
+    if (HOP.call(opts, 'initialCapacity')) {
       this.left = validateAndCoerce(opts.initialCapacity, 'opts.initialCapacity', true);
       if (this.left > this.capacity) {
         throw new RangeError(
@@ -41,12 +46,20 @@ export class TokenBucket {
       this.left = this.capacity;
     }
 
-    this.last = Date.now();
+    if (HOP.call(opts, 'clock') && typeof opts.clock === 'function') {
+      this.now = opts.clock;
+    } else if (_performance_now) {
+      this.now = _performance_now;
+    } else {
+      throw new Error('No available clock; consider supplying a clock function');
+    }
+
+    this.last = this.now();
   }
 
   // fill the bucket and update last fill time
   private _fill() {
-    const now = Date.now();
+    const now = this.now();
 
     // fractional amount to add to the bucket
     // prettier-ignore
@@ -84,7 +97,7 @@ export class TokenBucket {
         Math.ceil(
           (tokens - this.left)                 // tokens needed
           * this.fillTime / this.fillQuantity  // time per token
-          - (Date.now() - this.last)           // time since last token add
+          - (this.now() - this.last)           // time since last token add
         )
     );
   }
