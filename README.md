@@ -23,9 +23,24 @@ const timeToWait = bucket.take(3);
 * **capacity**: the capacity of the token bucket, aka burstiness
 * **fillQuantity**: how many tokens to add when filling
 * **fillTime**: how much time it takes to add fillQuantity tokens
-* **initialCapacity**: the bucket initializes to max capacity by default, but you can optionally change it here
+* **initialCapacity**: (optional) the bucket initializes to max capacity by default, but you can optionally change it here
+* **clock**: (optional) custom clock function
 
 `fillQuantity` and `fillTime` combined create a rate which is used to calculate both how many tokens to add at any given moment and how much time remains before a request can be fulfilled. I chose this approach since most of the time it's desirable to specify a rate limit in "X's per Y".
+
+### A note on clocks
+Prior to version 3.0.0, this library used `Date.now()` to perform its calculations. This is problematic when the system clock changes, for example during DST adjustment or clock skew corrections deriving from NTP. As of version 3.0.0, `performance.now()` is used, which provides a monotonically-increasing time counter (at least up to some very large numbers).
+
+If you'd like different behavior, you can supply the `clock` option as a function which returns a `number`, e.g.:
+
+```ts
+const bucket = new TokenBucket({
+    capacity: 10,
+    fillQuantity: 1,
+    fillTime: 1000, // in milliseconds
+    clock: () => Date.now(),
+});
+```
 
 ## Methods
 
