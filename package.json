@@ -19,12 +19,15 @@
   },
   "homepage": "https://github.com/myndzi/simple-token-bucket#readme",
   "scripts": {
-    "test": "jest",
+    "test": "vitest run",
     "clean": "rm -rf ./lib/*",
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:cjs": "tsc -p ./tsconfig.cjs.json && mv lib/cjs/index.js lib/cjs/index.cjs",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "test:smoke": "sh smoke/prepare.sh && node .smoke/smoke.cjs && node .smoke/smoke.mjs",
+    "test:esm": "TEST_TARGET=lib/esm/index.js vitest run",
+    "test:cjs": "TEST_TARGET=lib/cjs/index.cjs vitest run"
   },
   "type": "module",
   "main": "./lib/esm/index.js",
@@ -46,11 +49,9 @@
     }
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "jest": "^29.7.0",
-    "prettier": "^3.2.5",
-    "ts-jest": "^29.1.2",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2"
+    "@types/node": "^24.19.2",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }

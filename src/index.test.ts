@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BucketOptions, TokenBucket } from './index';
 
 const esc = (val: any) => String(val).replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -85,7 +86,7 @@ describe('TokenBucket', () => {
 
   describe('#take', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
     describe('errors', () => {
       const init = () => ({
@@ -124,14 +125,14 @@ describe('TokenBucket', () => {
 
         expect(bucket.take(1)).toEqual(0);
         expect(bucket.take(1)).toEqual(1);
-        jest.advanceTimersByTime(1);
+        vi.advanceTimersByTime(1);
         expect(bucket.take(1)).toEqual(1);
         now++;
         expect(bucket.take(1)).toEqual(0);
       });
 
       it('should use performance api', () => {
-        const spy = jest.spyOn(performance, 'now');
+        const spy = vi.spyOn(performance, 'now');
 
         const bucket = new TokenBucket({
           capacity: 1,
@@ -141,7 +142,7 @@ describe('TokenBucket', () => {
 
         expect(bucket.take(1)).toEqual(0);
         expect(bucket.take(1)).toEqual(1);
-        jest.advanceTimersByTime(1);
+        vi.advanceTimersByTime(1);
         expect(bucket.take(1)).toEqual(0);
         expect(spy.mock.calls.length).toBeGreaterThan(0);
         spy.mockRestore();
@@ -160,7 +161,7 @@ describe('TokenBucket', () => {
         expect(bucket.take(1)).toEqual(0);
         expect(bucket.take(1)).toEqual(0);
         expect(bucket.take(1)).toEqual(1);
-        jest.advanceTimersByTime(1);
+        vi.advanceTimersByTime(1);
         expect(bucket.take(1)).toEqual(0);
       });
       describe.each(tests)('%d tokens per %d ms', (fillQuantity, fillTime) => {
@@ -184,7 +185,7 @@ describe('TokenBucket', () => {
         it('should fill over time', () => {
           const { bucket, nextFillTime } = init();
           expect(bucket.take(2)).toEqual(nextFillTime);
-          jest.advanceTimersByTime(nextFillTime);
+          vi.advanceTimersByTime(nextFillTime);
           expect(bucket.take(2)).toEqual(0);
         });
 
@@ -192,7 +193,7 @@ describe('TokenBucket', () => {
           const { bucket, nextFillTime } = init();
           expect(bucket.take(1)).toEqual(0);
           const half = nextFillTime / 2;
-          jest.advanceTimersByTime(half);
+          vi.advanceTimersByTime(half);
           const min = Math.floor(half);
           const max = Math.ceil(half);
           const wait = bucket.take(1);
@@ -209,7 +210,7 @@ describe('TokenBucket', () => {
 
         it('should not go over `capacity`', () => {
           const { bucket, nextFillTime } = init();
-          jest.advanceTimersByTime(capacity * nextFillTime + 10000);
+          vi.advanceTimersByTime(capacity * nextFillTime + 10000);
           expect(bucket.take(capacity)).toEqual(0);
           expect(bucket.take(1)).toEqual(nextFillTime);
         });

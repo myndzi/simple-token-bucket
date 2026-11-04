@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - '22'
+          - '24'
+          - '26'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:esm
+      - run: npm run test:cjs
+      - run: npm run test:smoke
+
+  # Current vitest doesn't run on this Node, so swap in the last release that does, without saving it.
+  old-node-cjs:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '23'
+          - '25'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '26'
+      - run: npm ci
+      - run: npm run build
+      - name: Replace the dev tools with old vitest
+        run: |
+          rm -rf node_modules package-lock.json
+          npm pkg delete devDependencies
+          npm pkg set devDependencies.vitest=0.34.6 'devDependencies.vite=^4'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install --no-package-lock --no-audit
+      - run: node_modules/.bin/vitest run
+        env:
+          TEST_TARGET: lib/cjs/index.cjs
+
+  # Current vitest doesn't run on this Node, so swap in the last release that does, without saving it.
+  old-node-esm:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '23'
+          - '25'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '26'
+      - run: npm ci
+      - run: npm run build
+      - name: Replace the dev tools with old vitest
+        run: |
+          rm -rf node_modules package-lock.json
+          npm pkg delete devDependencies
+          npm pkg set devDependencies.vitest=0.34.6 'devDependencies.vite=^4'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install --no-package-lock --no-audit
+      - run: node_modules/.bin/vitest run
+        env:
+          TEST_TARGET: lib/esm/index.js
